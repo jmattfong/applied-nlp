@@ -1,0 +1,94 @@
+Applied-NLP, Homework 3 Answers
+
+Name: John Fong
+EID: jmf2356
+
+Link to applied-nlp fork: https://github.com/jmattfong/applied-nlp
+
+--------------------------------------------------------------------------------
+
+Problem 1
+
+Part (b): Provide the requested output.
+./anlp app Cluster -k 3 -d e ../data/cluster/generated/clusters_equal_variance.dat
+--------------------------------------------------------------------------------
+Confusion matrix.
+Columns give predicted counts. Rows give gold counts.
+--------------------------------------------------------------------------------
+50	0	0	|	50	[1]
+0	0	30	|	30	[2]
+0	20	0	|	20	[3]
+-------------------------
+50	20	30
+[0]	[1]	[2]
+
+Problem 2
+
+* Provide the command line call and the output.
+./anlp app Cluster -k 3 -d e -t z ../data/cluster/generated/clusters_bigger_x_variance.dat
+
+Problem 3
+
+Part (a): Provide the clusters and any comments.
+[-0.0998721712625823,-0.10944042636851499]
+[0.11724124452564007,0.12847354399782182]
+--------------------------------------------------------------------------------
+Confusion matrix.
+Columns give predicted counts. Rows give gold counts.
+--------------------------------------------------------------------------------
+23	2	|	25	[4]
+4	21	|	25	[6]
+-----------------
+27	23
+[0]	[1]
+
+Part (b): Discuss outliers.
+The two fourth grade classes that were incorrectly classified were the two that performed highest. The sixth grade classes that were incorrectly classified were the ones that performed the lowest.
+
+Part (c): Your interpretation for output when k=4.
+Cluster 1 seems to have gathered classes that performed below 4.0, purely 4th graders. Cluster 0 gathered classes that averaged in the 4.0-5.0 range, some 4th graders and mostly 6th graders. Cluster 3 gathered classes in the 5.0-6.0 range, the top 4th graders and some 6th graders. Cluster 2 got the best 6th graders only, performing above 6.0 on average.
+
+output:
+
+[Label: 4] <=> [Cluster: 1]
+Ids: BALDWIN_4th	BARNARD_4th	BRENNAN_4th	CLINTON_4th	CONTE_4th	DAY_4th	DWIGHT_4th	EDWARDS_4th	IVY_4th	KIMBERLY_4th	LINCOLN_BASSETT_4th	PRINCE_4th	SCRANTON_4th	SHERMAN_4th	TRUMAN_4th	WEST_HILLS_4th	WINCHESTER_4th	WOODWARD_4th
+
+[Label: 4] <=> [Cluster: 0]
+Ids: BEECHER_4th	DAVIS_4th	HALE_4th	LOVELL_4th	ROSS_4th
+
+[Label: 6] <=> [Cluster: 0]
+Ids: BALDWIN_6th	BRENNAN_6th	CONTE_6th	DAY_6th	DWIGHT_6th	IVY_6th	KIMBERLY_6th	LINCOLN_BASSETT_6th	PRINCE_6th	SCRANTON_6th	TRUMAN_6th	WINCHESTER_6th
+
+[Label: 6] <=> [Cluster: 2]
+Ids: BEECHER_6th	DAVIS_6th	EDGEWOOD_6th	HOOKER_6th	WOODWARD_6th
+
+[Label: 6] <=> [Cluster: 3]
+Ids: BARNARD_6th	CLINTON_6th	EDWARDS_6th	HALE_6th	LOVELL_6th	ROSS_6th	SHERMAN_6th	WEST_HILLS_6th
+
+[Label: 4] <=> [Cluster: 3]
+Ids: EDGEWOOD_4th	HOOKER_4th
+
+Problem 4
+
+* Describe what you found.
+    Due to the fairly even distribution of the data, clustering was not incredibly revealing. I did notice that clustering with Euclidean or Manhattan distance tended to create more meaningful clusters than those created by cosine distance. I think this is because the data all tends to fall along a similar trajectory. Also, countries with low birth and death rates are probably very different from countries with high birth and death rates, but cosine distance would put these together.
+    I also noticed that as the number of clusters increased, there tended to be a few countries that would get clustered by themselves. For example, Denmark would get put by itself at around 9 clusters. Ghana and the Ivory Coast also tended to be put together, with very high birth and death rates.
+
+Problem 5
+
+* Describe result of using z-score transform on the simple features.
+    Using z-scoring seemed to focus the data slightly, though not necessarily improve the clustering in any dramatic way. For example, rather than Hamilton's documents being spread over 4 clusters, with z-scoring they were only spread over 3 clusters. Similarly, Hamilton and Madison went from being spread over 3 clusters to just 2 clusters.
+    Z-scoring also seemed to improve the clustering of Hamilton's documents, but worsen Jay's. Almost all of Jay's documents got grouped with Hamilton's. Madison seemed largely unaffected, but in the shared categories mass shifted towards the larger Hamilton group once again.
+
+
+Problem 6
+    I found that changing words to use relative word frequency significantly decreased the effectiveness of the clustering.
+
+
+Problem 7
+
+
+
+
+
+
