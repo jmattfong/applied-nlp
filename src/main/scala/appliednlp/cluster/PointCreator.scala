@@ -124,17 +124,16 @@ class FederalistCreator(simple: Boolean = false) extends PointCreator {
    */
   def extractFull(texts: IndexedSeq[String]): IndexedSeq[Point] = {
     val totalText = SimpleTokenizer(texts.mkString(" ").toLowerCase())
-    val totalWordCount = totalText.length.toDouble
+    val totalNumWords = totalText.length.toDouble
     val totalWordCounts = totalText.groupBy(x=>x).mapValues(x=>x.length)
+    println(totalWordCounts.values.toList.sorted)
     texts.map(text => {
         val words = SimpleTokenizer(text.toLowerCase())
-        val wordCount = words.length.toDouble
-        val wordCounts = words.groupBy(x=>x).mapValues(x=>x.length)
-        val avgWordLen = words.map(_.length).sum / wordCount
-        Point(Array(wordCounts.getOrElse("the", 0),
-                    wordCounts.getOrElse("a", 0),
-                    wordCounts.getOrElse("of", 0),
-                    avgWordLen))
+        val numWords = words.length.toDouble
+        val wordCounts = words.filter(totalWordCounts.getOrElse(_,0)>5000)
+            .groupBy(x=>x).mapValues(x=>x.length/numWords)
+        val avgWordLen = words.map(_.length).sum / numWords
+        Point(wordCounts.values.toArray)
     })
   }
 

@@ -82,7 +82,9 @@ Problem 5
 
 
 Problem 6
-    I found that changing words to use relative word frequency significantly decreased the effectiveness of the clustering.
+    In order to improve my clustering, I first counted the number of occurrences of each word in the entire corpus and filtered the text by words that occurred more than 5000 times, which seemed to be a sweet spot for my method and resulted in having 4 words, the period and the comma. I then returned an array of the frequencies for these words.
+    I found that PCA and z-scoring both hurt the performance of my algorithm. Keeping the identity transformer seemed to perform best. I also found that using manhattan distance performed best for my algorithm.
+    My methods was by no means perfect, but it did manage to filter Jay's documents alone into exactly one cluster. It also made a larger cluster for Hamilton's documents and placed fewer of Madison's documents into the Hamilton cluster.
 
 
 Problem 7
