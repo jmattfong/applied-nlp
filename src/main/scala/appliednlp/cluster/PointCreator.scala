@@ -7,6 +7,9 @@ import chalk.util.SimpleTokenizer
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 
+import scala.io.Source
+import scala.collection.mutable.MutableList
+
 /**
  *  Read data and produce data points and their features.
  *
@@ -23,7 +26,13 @@ trait PointCreator extends (String => Iterator[(String,String,Point)])
  */
 object DirectCreator extends PointCreator {
 
- def apply(filename: String) = List[(String,String,Point)]().toIterator
+ def apply(filename: String) = {
+    Source.fromFile(filename).getLines.toList
+    .map(line => {
+        val parts = line.split("\\s+")
+        (parts(0), parts(1), Point(Array(parts(2).toDouble, parts(3).toDouble)))
+    }).toIterator
+ }
 
 }
 
@@ -34,7 +43,19 @@ object DirectCreator extends PointCreator {
  */
 object SchoolsCreator extends PointCreator {
 
-  def apply(filename: String) = List[(String,String,Point)]().toIterator
+  def apply(filename: String) = {
+    val result = new MutableList[(String, String, Point)]()
+    Source.fromFile(filename).getLines.toList.foreach(line => {
+        val parts = line.split("\\s+")
+        val len = parts.length
+        val name = parts.slice(0, len-4).mkString("_")
+        val fourthPoint = Point(parts.slice(len-4, len-2).map(_.toDouble))
+        val sixthPoint = Point(parts.slice(len-2, len).map(_.toDouble))
+        result += ((name+"_4th", "4", fourthPoint))
+        result += ((name+"_6th", "6", sixthPoint))
+    })
+    result.toIterator
+  }
 
 }
 
@@ -44,7 +65,14 @@ object SchoolsCreator extends PointCreator {
  */
 object CountriesCreator extends PointCreator {
 
-  def apply(filename: String) = List[(String,String,Point)]().toIterator
+  def apply(filename: String) = {
+    Source.fromFile(filename).getLines.toList
+    .map(line => {
+        val parts = line.split("\\s+")
+        val len = parts.length
+        (parts.slice(0, len-2).mkString("_"), "1", Point(parts.slice(len-2, len).map(_.toDouble)))
+    }).toIterator
+  }
 
 }
 
@@ -57,7 +85,14 @@ object CountriesCreator extends PointCreator {
  */
 class FederalistCreator(simple: Boolean = false) extends PointCreator {
 
-  def apply(filename: String) = List[(String,String,Point)]().toIterator
+  def apply(filename: String) = {
+    val extractedArticles = FederalistArticleExtractor(filename)
+    val ids = extractedArticles.flatMap(_.get("id"))
+    val authors = extractedArticles.flatMap(_.get("author")).map(_.replaceAll("\\s+", "_"))
+    val texts = extractedArticles.flatMap(_.get("text"))
+    val extracted = if(simple) extractSimple(texts) else extractFull(texts)
+    (ids, authors, extracted).zipped.toIterator
+  }
 
   /**
    * Given the text of an article, compute the frequency of "the", "people"
@@ -70,7 +105,13 @@ class FederalistCreator(simple: Boolean = false) extends PointCreator {
    *              FederalistArticleExtractor).
    */
   def extractSimple(texts: IndexedSeq[String]): IndexedSeq[Point] = {
-    Vector[Point]()
+    texts.map(text => {
+        val words = SimpleTokenizer(text.toLowerCase())
+        val wordCounts = words.groupBy(x=>x).mapValues(x=>x.length)
+        Point(Array(wordCounts.getOrElse("the", 0),
+                    wordCounts.getOrElse("people", 0),
+                    wordCounts.getOrElse("which", 0)))
+    })
   }
 
   /**
@@ -82,7 +123,19 @@ class FederalistCreator(simple: Boolean = false) extends PointCreator {
    *              FederalistArticleExtractor).
    */
   def extractFull(texts: IndexedSeq[String]): IndexedSeq[Point] = {
-    Vector[Point]()
+    val totalText = SimpleTokenizer(texts.mkString(" ").toLowerCase())
+    val totalWordCount = totalText.length.toDouble
+    val totalWordCounts = totalText.groupBy(x=>x).mapValues(x=>x.length)
+    texts.map(text => {
+        val words = SimpleTokenizer(text.toLowerCase())
+        val wordCount = words.length.toDouble
+        val wordCounts = words.groupBy(x=>x).mapValues(x=>x.length)
+        val avgWordLen = words.map(_.length).sum / wordCount
+        Point(Array(wordCounts.getOrElse("the", 0),
+                    wordCounts.getOrElse("a", 0),
+                    wordCounts.getOrElse("of", 0),
+                    avgWordLen))
+    })
   }
 
 }

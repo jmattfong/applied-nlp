@@ -27,8 +27,32 @@ object Cluster {
     Logger.getRootLogger.setLevel(logLevel)
     
     // Your code starts here. You'll use and extend it during every problem.
-
-
+    val pointCreator: PointCreator = opts.features() match {
+        case "standard"   => DirectCreator
+        case "schools"    => SchoolsCreator
+        case "countries"  => CountriesCreator
+        case "fed-simple" => new FederalistCreator(true)
+        case "fed-full"   => new FederalistCreator(false)
+        case _ => null
+    }
+    val pointData = pointCreator(opts.filename()).toList
+    val ids = pointData.map(x => x match{case(i,_,_)=>i}).toArray
+    val labels = pointData.map(x => x match{case(_,i,_)=>i}).toArray
+    val points = pointData.map(x => x match{case(_,_,p)=>p}).toArray
+    val transformedPoints = PointTransformer(opts.transform(), points)(points)
+    val distance: nak.cluster.DistanceFunction = DistanceFunction(opts.distance())
+    val kmeans = new Kmeans(transformedPoints, distance, fixedSeedForRandom = true)
+    val (bestDispersion, bestCentroids) = kmeans.run(opts.k())
+    if(opts.showCentroids()){
+        println(bestCentroids.mkString("\n"))
+    }
+    
+    val (squaredDistanceSum, memberships) = kmeans.computeClusterMemberships(bestCentroids)
+    val confusionMatrix = ClusterConfusionMatrix(labels, opts.k(), memberships)
+    println(confusionMatrix)
+    if(opts.report()){
+        ClusterReport(ids, labels, memberships)
+    }
   }
 
 }
