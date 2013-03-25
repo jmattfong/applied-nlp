@@ -107,14 +107,55 @@ class ExtendedFeatureExtractor(bitvectors: Map[String, BitVector])
   override def apply(
     verb: String, noun: String, prep: String, prepObj: String): Iterable[AttrVal] = {
 
-    // Use the basic feature extractor to get the basic features (no need to 
+    // Use the basic feature extractor to get the basic features (no need to
     // duplicate effort and specify it again).
     val basicFeatures = BasicFeatureExtractor(verb, noun, prep, prepObj)
 
     // Extract more features
+        val extendedFeatures = List(
+      AttrVal("verb+noun", verb+noun),
+      AttrVal("verb_stem", stemmer(verb)),
+      AttrVal("verb_form", wordForm(verb)),
+      AttrVal("verb_suffix", wordSuffix(verb)),
+      AttrVal("noun_form", wordForm(noun)),
+      AttrVal("noun_suffix", wordSuffix(noun)),
+      AttrVal("prep+verb", prep+verb),
+      AttrVal("prep+noun", prep+noun),
+      AttrVal("prep_form", wordForm(prep)),
+      AttrVal("prep_suffix", wordSuffix(prep)),
+      AttrVal("prepObj+verb", prepObj+verb),
+      AttrVal("prepObj+noun", prepObj+noun),
+      AttrVal("prepObj_form", wordForm(prepObj)),
+      AttrVal("prepObj_suffix", wordSuffix(prepObj)))
+
+    val bitStrings = (splitBitVector(verb, "verb") ++ splitBitVector(noun, "noun") ++ splitBitVector(prep, "prep") ++ splitBitVector(prepObj, "prepObj"))
 
     // Return the features. You should of course add your features to basic ones.
-    basicFeatures
+    (basicFeatures ++ extendedFeatures ++ bitStrings)
+  }
+
+  def splitBitVector(word: String, wordType: String) = {
+    val wordBV = bitvectors(word)
+
+    List(
+      AttrVal(wordType+"_bit_top", wordBV.keepTopBits(8).toString),
+      AttrVal(wordType+"_bit_bot", wordBV.keepBottomBits(8).toString))
+  }
+
+  def wordSuffix(word: String) = {
+    val suffixes = List("able", "ible", "al", "ed", "en", "er", "est", "ful", "ic", "ing", "ion", "tion", "ty", "ive", "less", "ly", "ment", "ness", "ous", "s")
+    val sufMatches = for (suffix <- suffixes) yield if (word.toLowerCase.endsWith(suffix)) "1" else "0"
+
+    sufMatches.foldLeft("")((x,y) => x+y)
+  }
+
+  def wordForm(word: String) = {
+    val number = if (word.matches("""[\d\$\,\.\-\+]+""")) "1" else "0"
+    val start_cap = if (word.matches("""[A-Z]+[a-z]+""")) "1" else "0"
+    val all_cap = if (word.matches("""[A-Z]+""")) "1" else "0"
+    val plural = if (word.toLowerCase.endsWith("s")) "1" else "0"
+
+    (number + start_cap + all_cap + plural)
   }
 
 }
@@ -148,6 +189,14 @@ class BitVector(bits: IndexedSeq[Int]) {
    */
   def keepTopBits(index: Int) =
     new BitVector(bits.take(index) ++ Vector.fill(bits.length - index)(0))
+    
+  /**
+   *  Keep the bottom bits up to the given index, and then make the remaining bits
+   *  zero.
+   */
+  def keepBottomBits(index: Int) =
+    new BitVector(Vector.fill(bits.length - index)(0) ++ bits.reverse.take(index))
+
 
   /**
    * Concatenate the bits together.
